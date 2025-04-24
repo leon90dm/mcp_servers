@@ -1,6 +1,6 @@
 {
-  "name": "@modelcontextprotocol/server-memory",
-  "version": "0.6.3",
+  "name": "@toursnap/server-memory",
+  "version": "0.6.8",
   "description": "MCP server for enabling memory for Claude through a knowledge graph",
   "license": "MIT",
   "author": "Anthropic, PBC (https://anthropic.com)",
@@ -11,15 +11,21 @@
     "mcp-server-memory": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "test"
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
     "prepare": "npm run build",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "test/run-tests.sh",
+    "test:supabase": "node test/test-supabase.js",
+    "test:api": "node test/test-memory-api.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.0.1"
+    "@modelcontextprotocol/sdk": "1.0.1",
+    "@supabase/supabase-js": "2.39.3",
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
     "@types/node": "^22",

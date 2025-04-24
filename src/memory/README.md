@@ -152,7 +152,7 @@ Add this to your claude_desktop_config.json:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-memory"
+        "@toursnap/server-memory"
       ]
     }
   }
@@ -170,10 +170,13 @@ The server can be configured using the following environment variables:
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-memory"
+        "@toursnap/server-memory"
       ],
       "env": {
-        "MEMORY_FILE_PATH": "/path/to/custom/memory.json"
+        "MEMORY_FILE_PATH": "/path/to/custom/memory.json",
+        "STORAGE_TYPE": "file",
+        "SUPABASE_URL": "https://your-project-url.supabase.co",
+        "SUPABASE_KEY": "your-supabase-anon-key"
       }
     }
   }
@@ -181,18 +184,34 @@ The server can be configured using the following environment variables:
 ```
 
 - `MEMORY_FILE_PATH`: Path to the memory storage JSON file (default: `memory.json` in the server directory)
+- `STORAGE_TYPE`: Storage backend to use, either `file` (default) or `supabase`
+- `SUPABASE_URL`: URL of your Supabase project (required when `STORAGE_TYPE` is `supabase`)
+- `SUPABASE_KEY`: Anon key for your Supabase project (required when `STORAGE_TYPE` is `supabase`)
+
+#### Using a .env File
+
+You can also configure the server using a `.env` file in the root directory of the memory module:
+
+```
+MEMORY_FILE_PATH=/path/to/custom/memory.json
+STORAGE_TYPE=supabase
+SUPABASE_URL=https://your-project-url.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
+```
+
+This is particularly useful for development and testing.
 
 # VS Code Installation Instructions
 
 For quick installation, use one of the one-click installation buttons below:
 
-[![Install with NPX in VS Code](https://img.shields.io/badge/VS_Code-NPM-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40modelcontextprotocol%2Fserver-memory%22%5D%7D) [![Install with NPX in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-NPM-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40modelcontextprotocol%2Fserver-memory%22%5D%7D&quality=insiders)
+[![Install with NPX in VS Code](https://img.shields.io/badge/VS_Code-NPM-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40toursnap%2Fserver-memory%22%5D%7D) [![Install with NPX in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-NPM-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40toursnap%2Fserver-memory%22%5D%7D&quality=insiders)
 
 [![Install with Docker in VS Code](https://img.shields.io/badge/VS_Code-Docker-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-v%22%2C%22claude-memory%3A%2Fapp%2Fdist%22%2C%22--rm%22%2C%22mcp%2Fmemory%22%5D%7D) [![Install with Docker in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Docker-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-v%22%2C%22claude-memory%3A%2Fapp%2Fdist%22%2C%22--rm%22%2C%22mcp%2Fmemory%22%5D%7D&quality=insiders)
 
 For manual installation, add the following JSON block to your User Settings (JSON) file in VS Code. You can do this by pressing `Ctrl + Shift + P` and typing `Preferences: Open Settings (JSON)`.
 
-Optionally, you can add it to a file called `.vscode/mcp.json` in your workspace. This will allow you to share the configuration with others. 
+Optionally, you can add it to a file called `.vscode/mcp.json` in your workspace. This will allow you to share the configuration with others.
 
 > Note that the `mcp` key is not needed in the `.vscode/mcp.json` file.
 
@@ -206,7 +225,7 @@ Optionally, you can add it to a file called `.vscode/mcp.json` in your workspace
         "command": "npx",
         "args": [
           "-y",
-          "@modelcontextprotocol/server-memory"
+          "@toursnap/server-memory"
         ]
       }
     }
@@ -240,7 +259,7 @@ Optionally, you can add it to a file called `.vscode/mcp.json` in your workspace
 
 The prompt for utilizing memory depends on the use case. Changing the prompt will help the model determine the frequency and types of memories created.
 
-Here is an example prompt for chat personalization. You could use this prompt in the "Custom Instructions" field of a [Claude.ai Project](https://www.anthropic.com/news/projects). 
+Here is an example prompt for chat personalization. You could use this prompt in the "Custom Instructions" field of a [Claude.ai Project](https://www.anthropic.com/news/projects).
 
 ```
 Follow these steps for each interaction:
@@ -268,12 +287,57 @@ Follow these steps for each interaction:
      b) Store facts about them as observations
 ```
 
+## Supabase Setup
+
+The memory server can use Supabase as a storage backend instead of the local file system. This provides several advantages:
+
+- Improved reliability and data integrity with a proper database
+- Better performance for larger knowledge graphs
+- Improved scalability for concurrent access
+- Ability to leverage Supabase features like real-time updates
+
+### Setup Instructions
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Apply the database schema by running the SQL from `memory_schema.sql` in the Supabase SQL editor
+3. Get your Supabase URL and anon key from the project settings
+4. Configure the memory server with the following environment variables:
+   - `STORAGE_TYPE=supabase`
+   - `SUPABASE_URL=https://your-project-url.supabase.co`
+   - `SUPABASE_KEY=your-supabase-anon-key`
+
+### Schema
+
+The Supabase schema consists of three main tables:
+
+1. `entities` - Stores the primary nodes in the knowledge graph
+   - `id` - UUID primary key
+   - `name` - Unique name of the entity
+   - `entity_type` - Type of the entity
+   - `created_at` - Timestamp of creation
+   - `updated_at` - Timestamp of last update
+
+2. `observations` - Stores information about entities
+   - `id` - UUID primary key
+   - `entity_id` - Foreign key to entities table
+   - `content` - The observation text
+   - `created_at` - Timestamp of creation
+   - `updated_at` - Timestamp of last update
+
+3. `relations` - Stores connections between entities
+   - `id` - UUID primary key
+   - `from_entity_id` - Foreign key to entities table (source)
+   - `to_entity_id` - Foreign key to entities table (target)
+   - `relation_type` - Type of the relation
+   - `created_at` - Timestamp of creation
+   - `updated_at` - Timestamp of last update
+
 ## Building
 
 Docker:
 
 ```sh
-docker build -t mcp/memory -f src/memory/Dockerfile . 
+docker build -t mcp/memory -f src/memory/Dockerfile .
 ```
 
 ## License

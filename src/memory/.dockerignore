@@ -1,0 +1,48 @@
+# Node.js dependencies and build artifacts
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# TypeScript build output
+dist
+
+# Development and environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+
+# Editor and IDE files
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Git and version control
+.git
+.gitignore
+
+# Test files
+__tests__
+*.test.ts
+*.spec.ts
+coverage
+
+# Documentation
+docs
+*.md
+
+# Local memory files (when using file storage)
+memory.json
+*.json.bak
+
+# Miscellaneous
+*.log
+.npm
+.npmrc
+.yarnrc
+.yarn-integrity
