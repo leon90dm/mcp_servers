@@ -12,7 +12,7 @@ import { generateEmbedding } from './embedding-service.js';
 export async function semanticSearch(
   storageProvider: StorageProvider,
   query: string,
-  threshold: number = 0.7,
+  threshold: number = 0.65,
   limit: number = 10
 ): Promise<KnowledgeGraph> {
   // Check if the storage provider supports semantic search
@@ -52,7 +52,7 @@ export async function semanticSearch(
     const fullGraph = await storageProvider.loadGraph();
 
     // Get additional entities
-    const additionalEntities = fullGraph.entities.filter(e => 
+    const additionalEntities = fullGraph.entities.filter(e =>
       additionalEntityNames.has(e.name)
     );
 
@@ -61,7 +61,7 @@ export async function semanticSearch(
     const allEntityNames = new Set(allMatchingEntities.map(e => e.name));
 
     // Filter relations to only include those between matching entities
-    const matchingRelations = fullGraph.relations.filter(r => 
+    const matchingRelations = fullGraph.relations.filter(r =>
       allEntityNames.has(r.from) && allEntityNames.has(r.to)
     );
 

@@ -419,7 +419,7 @@ class KnowledgeGraphManager {
    * @param threshold Similarity threshold (0-1)
    * @returns A knowledge graph containing matching entities and their relations
    */
-  async semanticSearchNodes(query: string, threshold: number = 0.7): Promise<KnowledgeGraph> {
+  async semanticSearchNodes(query: string, threshold: number = 0.65): Promise<KnowledgeGraph> {
     // Check if the storage provider supports semantic search
     if ('semanticSearchEntities' in this.storageProvider &&
         typeof this.storageProvider.semanticSearchEntities === 'function') {
@@ -443,7 +443,7 @@ const knowledgeGraphManager = new KnowledgeGraphManager();
 // The server instance and tools exposed to Claude
 const server = new Server({
   name: "memory-server",
-  version: "0.6.3",
+  version: "0.8.1",
 },    {
     capabilities: {
       tools: {},
@@ -636,7 +636,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             threshold: {
               type: "number",
               description: "Similarity threshold (0.0 to 1.0) for including results",
-              default: 0.7
+              default: 0.65
             }
           },
           required: ["query"],

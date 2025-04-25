@@ -30,17 +30,17 @@ export class SupabaseVectorProvider implements StorageProvider {
     try {
       // Check if vector extension is enabled
       const { data, error } = await this.supabase.rpc('has_vector_extension');
-      
+
       if (error) {
         // If the function doesn't exist, create it
         await this.supabase.rpc('create_vector_extension_check');
         const { data: retryData, error: retryError } = await this.supabase.rpc('has_vector_extension');
-        
+
         if (retryError || !retryData) {
           console.warn("Vector extension not available. Semantic search will not work.");
         }
       }
-      
+
       this.initialized = true;
     } catch (error) {
       console.warn("Failed to check vector extension:", error);
@@ -53,7 +53,7 @@ export class SupabaseVectorProvider implements StorageProvider {
    */
   async loadGraph(): Promise<KnowledgeGraph> {
     await this.initialize();
-    
+
     try {
       // Load entities
       const { data: entities, error: entitiesError } = await this.supabase
@@ -124,7 +124,7 @@ export class SupabaseVectorProvider implements StorageProvider {
    */
   async saveGraph(graph: KnowledgeGraph): Promise<void> {
     await this.initialize();
-    
+
     try {
       // First, get existing entities to map names to IDs
       const { data: existingEntities, error: entitiesError } = await this.supabase
@@ -242,7 +242,7 @@ export class SupabaseVectorProvider implements StorageProvider {
    */
   async storeEntityEmbedding(entityName: string, embedding: number[]): Promise<void> {
     await this.initialize();
-    
+
     try {
       const { data: entity, error: findError } = await this.supabase
         .from('entities')
@@ -272,7 +272,7 @@ export class SupabaseVectorProvider implements StorageProvider {
    */
   async storeObservationEmbedding(entityName: string, observationContent: string, embedding: number[]): Promise<void> {
     await this.initialize();
-    
+
     try {
       // Get entity ID
       const { data: entity, error: findEntityError } = await this.supabase
@@ -313,9 +313,9 @@ export class SupabaseVectorProvider implements StorageProvider {
    * @param limit Maximum number of results
    * @returns Array of matching entities
    */
-  async semanticSearchEntities(queryEmbedding: number[], threshold: number = 0.7, limit: number = 10): Promise<Entity[]> {
+  async semanticSearchEntities(queryEmbedding: number[], threshold: number = 0.65, limit: number = 10): Promise<Entity[]> {
     await this.initialize();
-    
+
     try {
       // Call the match_entities function
       const { data, error } = await this.supabase.rpc('match_entities', {
@@ -358,12 +358,12 @@ export class SupabaseVectorProvider implements StorageProvider {
    * @returns Array of matching observations with their entity names
    */
   async semanticSearchObservations(
-    queryEmbedding: number[], 
-    threshold: number = 0.7, 
+    queryEmbedding: number[],
+    threshold: number = 0.65,
     limit: number = 20
   ): Promise<{entityName: string, observation: Observation}[]> {
     await this.initialize();
-    
+
     try {
       // Call the match_observations function
       const { data, error } = await this.supabase.rpc('match_observations', {
