@@ -20,6 +20,7 @@
     "watch": "tsc --watch",
     "test": "test/run-tests.sh",
     "test:supabase": "node test/test-supabase.js",
+    "test:supabase:semantic": "node test/test-supabase-semantic.js",
     "test:api": "node test/test-memory-api.js",
     "test:embedding": "test/run-embedding-tests.sh",
     "test:semantic": "test/run-semantic-search-tests.sh"
