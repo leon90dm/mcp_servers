@@ -1,7 +1,7 @@
 {
   "name": "@toursnap/server-memory",
-  "version": "0.7.0",
-  "description": "MCP server for enabling memory for Claude through a knowledge graph",
+  "version": "0.8.0",
+  "description": "MCP server for enabling memory for Claude through a knowledge graph with semantic search capabilities",
   "license": "MIT",
   "author": "bilbo",
   "homepage": "https://modelcontextprotocol.io",
@@ -12,7 +12,9 @@
   },
   "files": [
     "dist",
-    "test"
+    "test",
+    "vector_schema.sql",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",

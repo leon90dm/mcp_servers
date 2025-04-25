@@ -128,7 +128,8 @@ async function runTest() {
     await clearTestData();
 
     // Import the memory module
-    const memoryModulePath = path.join(fileURLToPath(import.meta.url), '../../dist/index.js');
+    const memoryModulePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../dist/index.js');
+    console.log('Loading memory module from:', memoryModulePath);
     const memoryModule = await import(memoryModulePath);
 
     // Create a mock server
