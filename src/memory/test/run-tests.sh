@@ -43,4 +43,20 @@ fi
 
 echo "Memory module API test passed!"
 
+# Run the embedding service test if vector search is enabled
+if [ "$VECTOR_ENABLED" = "true" ] && [ ! -z "$EMBEDDING_API_KEY" ]; then
+  echo "Running embedding service test..."
+  node test-embedding-service.js
+  EMBEDDING_TEST_RESULT=$?
+
+  if [ $EMBEDDING_TEST_RESULT -ne 0 ]; then
+    echo "Embedding service test failed!"
+    exit 1
+  fi
+
+  echo "Embedding service test passed!"
+else
+  echo "Skipping embedding service test (VECTOR_ENABLED is not true or EMBEDDING_API_KEY is not set)"
+fi
+
 echo "All tests passed successfully!"

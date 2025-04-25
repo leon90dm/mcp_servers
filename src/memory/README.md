@@ -117,6 +117,17 @@ Example:
     - Observation content
   - Returns matching entities and their relations
 
+- **semantic_search**
+  - Search for nodes using semantic similarity
+  - Input:
+    - `query` (string): The search query
+    - `threshold` (number, optional): Similarity threshold (0.0 to 1.0), default: 0.7
+  - Uses vector embeddings to find semantically similar:
+    - Entity names and types
+    - Observation content
+  - Returns matching entities and their relations
+  - Requires Supabase with vector extension enabled
+
 - **open_nodes**
   - Retrieve specific nodes by name
   - Input: `names` (string[])
@@ -176,7 +187,11 @@ The server can be configured using the following environment variables:
         "MEMORY_FILE_PATH": "/path/to/custom/memory.json",
         "STORAGE_TYPE": "file",
         "SUPABASE_URL": "https://your-project-url.supabase.co",
-        "SUPABASE_KEY": "your-supabase-anon-key"
+        "SUPABASE_KEY": "your-supabase-anon-key",
+        "VECTOR_ENABLED": "true",
+        "EMBEDDING_API_KEY": "your-embedding-api-key",
+        "EMBEDDING_API_URL": "https://cloud.infini-ai.com/maas/v1/embeddings",
+        "EMBEDDING_MODEL": "jina-embeddings-v2-base-zh"
       }
     }
   }
@@ -187,6 +202,11 @@ The server can be configured using the following environment variables:
 - `STORAGE_TYPE`: Storage backend to use, either `file` (default) or `supabase`
 - `SUPABASE_URL`: URL of your Supabase project (required when `STORAGE_TYPE` is `supabase`)
 - `SUPABASE_KEY`: Anon key for your Supabase project (required when `STORAGE_TYPE` is `supabase`)
+- `VECTOR_ENABLED`: Enable vector search capabilities (requires Supabase)
+- `EMBEDDING_API_KEY`: API key for the embedding service
+- `EMBEDDING_API_URL`: URL of the embedding service (default: `https://cloud.infini-ai.com/maas/v1/embeddings`)
+- `EMBEDDING_MODEL`: Embedding model to use (default: `jina-embeddings-v2-base-zh`)
+- `EMBEDDING_DIMENSION`: Dimension of the embedding vectors (default: `768`)
 
 #### Using a .env File
 
@@ -197,6 +217,11 @@ MEMORY_FILE_PATH=/path/to/custom/memory.json
 STORAGE_TYPE=supabase
 SUPABASE_URL=https://your-project-url.supabase.co
 SUPABASE_KEY=your-supabase-anon-key
+VECTOR_ENABLED=true
+EMBEDDING_API_KEY=your-embedding-api-key
+EMBEDDING_API_URL=https://cloud.infini-ai.com/maas/v1/embeddings
+EMBEDDING_MODEL=jina-embeddings-v2-base-zh
+EMBEDDING_DIMENSION=768
 ```
 
 This is particularly useful for development and testing.
@@ -207,7 +232,7 @@ For quick installation, use one of the one-click installation buttons below:
 
 [![Install with NPX in VS Code](https://img.shields.io/badge/VS_Code-NPM-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40toursnap%2Fserver-memory%22%5D%7D) [![Install with NPX in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-NPM-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40toursnap%2Fserver-memory%22%5D%7D&quality=insiders)
 
-[![Install with Docker in VS Code](https://img.shields.io/badge/VS_Code-Docker-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-v%22%2C%22claude-memory%3A%2Fapp%2Fdist%22%2C%22--rm%22%2C%22mcp%2Fmemory%22%5D%7D) [![Install with Docker in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Docker-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=memory&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-v%22%2C%22claude-memory%3A%2Fapp%2Fdist%22%2C%22--rm%22%2C%22mcp%2Fmemory%22%5D%7D&quality=insiders)
+...
 
 For manual installation, add the following JSON block to your User Settings (JSON) file in VS Code. You can do this by pressing `Ctrl + Shift + P` and typing `Preferences: Open Settings (JSON)`.
 
@@ -331,6 +356,23 @@ The Supabase schema consists of three main tables:
    - `relation_type` - Type of the relation
    - `created_at` - Timestamp of creation
    - `updated_at` - Timestamp of last update
+
+### Vector Search Setup
+
+To enable semantic search capabilities, you need to set up vector search in Supabase:
+
+1. Enable the pgvector extension in your Supabase project
+2. Apply the vector schema by running the SQL from `vector_schema.sql` in the Supabase SQL editor
+3. Configure the memory server with the following additional environment variables:
+   - `VECTOR_ENABLED=true`
+   - `EMBEDDING_API_KEY=your-embedding-api-key`
+   - `EMBEDDING_API_URL=https://cloud.infini-ai.com/maas/v1/embeddings` (or your preferred embedding service)
+   - `EMBEDDING_MODEL=jina-embeddings-v2-base-zh` (or your preferred embedding model)
+
+The vector schema adds:
+- Vector columns to the entities and observations tables
+- Vector indexes for efficient similarity search
+- SQL functions for performing similarity searches
 
 ## Building
 

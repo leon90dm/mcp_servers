@@ -11,6 +11,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { Entity, KnowledgeGraph, Relation, StorageProvider } from './types.js';
+import { SupabaseVectorProvider } from './supabase-vector-provider.js';
+import { semanticSearch } from './semantic-search.js';
 
 // Load environment variables from .env file if it exists
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,28 +36,7 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const STORAGE_TYPE = process.env.STORAGE_TYPE || 'file'; // 'file' or 'supabase'
 
 // We are storing our memory using entities, relations, and observations in a graph structure
-interface Entity {
-  name: string;
-  entityType: string;
-  observations: string[];
-}
-
-interface Relation {
-  from: string;
-  to: string;
-  relationType: string;
-}
-
-interface KnowledgeGraph {
-  entities: Entity[];
-  relations: Relation[];
-}
-
-// Storage interface for different storage implementations
-interface StorageProvider {
-  loadGraph(): Promise<KnowledgeGraph>;
-  saveGraph(graph: KnowledgeGraph): Promise<void>;
-}
+// Using types from ./types.js
 
 // File-based storage implementation
 class FileStorageProvider implements StorageProvider {
@@ -280,7 +262,16 @@ function createStorageProvider(): StorageProvider {
       return new FileStorageProvider(MEMORY_FILE_PATH);
     }
     try {
-      return new SupabaseStorageProvider(SUPABASE_URL, SUPABASE_KEY);
+      // Check if vector search is enabled
+      const VECTOR_ENABLED = process.env.VECTOR_ENABLED === 'true';
+
+      if (VECTOR_ENABLED) {
+        console.log("Using Supabase with vector search capabilities");
+        return new SupabaseVectorProvider(SUPABASE_URL, SUPABASE_KEY);
+      } else {
+        console.log("Using Supabase without vector search capabilities");
+        return new SupabaseStorageProvider(SUPABASE_URL, SUPABASE_KEY);
+      }
     } catch (error) {
       console.error("Error creating Supabase storage provider:", error);
       console.warn("Falling back to file storage");
@@ -420,6 +411,29 @@ class KnowledgeGraphManager {
     };
 
     return filteredGraph;
+  }
+
+  /**
+   * Perform semantic search on the knowledge graph
+   * @param query The search query
+   * @param threshold Similarity threshold (0-1)
+   * @returns A knowledge graph containing matching entities and their relations
+   */
+  async semanticSearchNodes(query: string, threshold: number = 0.7): Promise<KnowledgeGraph> {
+    // Check if the storage provider supports semantic search
+    if ('semanticSearchEntities' in this.storageProvider &&
+        typeof this.storageProvider.semanticSearchEntities === 'function') {
+      try {
+        return await semanticSearch(this.storageProvider, query, threshold);
+      } catch (error) {
+        console.error("Error performing semantic search:", error);
+        console.warn("Falling back to text-based search");
+        return this.searchNodes(query);
+      }
+    } else {
+      console.warn("Storage provider does not support semantic search, using text-based search instead");
+      return this.searchNodes(query);
+    }
   }
 }
 
@@ -609,6 +623,25 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["names"],
         },
       },
+      {
+        name: "semantic_search",
+        description: "Search for nodes in the knowledge graph using semantic similarity",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "The search query to find semantically similar entities and observations"
+            },
+            threshold: {
+              type: "number",
+              description: "Similarity threshold (0.0 to 1.0) for including results",
+              default: 0.7
+            }
+          },
+          required: ["query"],
+        },
+      },
     ],
   };
 });
@@ -640,6 +673,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
       return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.readGraph(), null, 2) }] };
     case "search_nodes":
       return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.searchNodes(args.query as string), null, 2) }] };
+    case "semantic_search":
+      return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.semanticSearchNodes(args.query as string, args.threshold as number), null, 2) }] };
     case "open_nodes":
       return { content: [{ type: "text", text: JSON.stringify(await knowledgeGraphManager.openNodes(args.names as string[]), null, 2) }] };
     default:
@@ -657,6 +692,21 @@ async function main() {
       console.error("Warning: Supabase storage selected but URL or key not provided. Falling back to file storage.");
     } else {
       console.error(`Connected to Supabase project at ${SUPABASE_URL}`);
+
+      // Log vector search capability
+      const VECTOR_ENABLED = process.env.VECTOR_ENABLED === 'true';
+      if (VECTOR_ENABLED) {
+        console.error("Vector search is ENABLED - semantic search will use vector embeddings");
+
+        // Check if embedding API key is set
+        if (!process.env.EMBEDDING_API_KEY) {
+          console.error("Warning: EMBEDDING_API_KEY is not set. Semantic search will not work properly.");
+        } else {
+          console.error(`Using embedding model: ${process.env.EMBEDDING_MODEL || 'jina-embeddings-v2-base-zh'}`);
+        }
+      } else {
+        console.error("Vector search is DISABLED - semantic search will fall back to text-based search");
+      }
     }
   } else {
     console.error(`Using file storage at ${MEMORY_FILE_PATH}`);
